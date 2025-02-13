@@ -13,9 +13,9 @@ import java.nio.file.Paths;
  * See https://mkyong.com/java/how-to-resize-an-image-in-java/
  */
 public class ResizeImage {
-    private static final int IMG_WIDTH = 400;
-    private static final String sourceImageName = "/Users/kevinearls/tmp/SaintJonas.jpg";
-    private static final String destinationImageName = "/Users/kevinearls/tmp/SaintJonas1.png";
+    private static final int IMG_WIDTH = 800;
+    private static final String sourceImageName = "/Users/kevinearls/tmp/Namibia1.jpg";
+    private static final String destinationImageName = "/Users/kevinearls/tmp/Namibia1.png";
 
     public static void main(String[] args) throws IOException {
         Path source = Paths.get(sourceImageName);
@@ -26,12 +26,18 @@ public class ResizeImage {
         }
     }
 
-    private static void resize(InputStream input, Path target, int width) throws IOException {
+    private static void resize(InputStream input, Path target, int desiredWidth) throws IOException {
         BufferedImage originalImage = ImageIO.read(input);
-        System.out.println("Original Image Height: " + originalImage.getHeight() + " width: " + originalImage.getWidth());
-        var targetHeight = originalImage.getHeight() / (originalImage.getWidth()/width);
+        System.out.println("Original Image Width: " + originalImage.getWidth() + " height: " + originalImage.getHeight());
 
-        Image resizedImage = originalImage.getScaledInstance(width, targetHeight, Image.SCALE_SMOOTH);
+        // Only scale if the image is wider than the desiredWidth
+        int targetWidth = originalImage.getWidth();
+        int targetHeight = originalImage.getHeight();
+        if (originalImage.getWidth() > desiredWidth) {
+            targetHeight = originalImage.getHeight() / (originalImage.getWidth() / desiredWidth);
+            targetWidth = desiredWidth;
+        }
+        Image resizedImage = originalImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
 
         String s = target.getFileName().toString();
         String fileExtension = s.substring(s.lastIndexOf(".") + 1);
