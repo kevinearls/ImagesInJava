@@ -9,9 +9,17 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
+        <com.drewnoakes.metadata-extractor.version>2.19.0</com.drewnoakes.metadata-extractor.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.drewnoakes</groupId>
+            <artifactId>metadata-extractor</artifactId>
+            <version>${com.drewnoakes.metadata-extractor.version}</version> </dependency>
+    </dependencies>
 
 </project>
