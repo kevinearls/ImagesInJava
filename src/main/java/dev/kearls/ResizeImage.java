@@ -11,21 +11,19 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 /**
  * See https://mkyong.com/java/how-to-resize-an-image-in-java/
  *
- * Which image do we rotate?  The original, or the scaled one?
  */
 public class ResizeImage {
     private static final int EXIF_ROTATION_NORMAL = 1;
@@ -35,11 +33,38 @@ public class ResizeImage {
 
     private static final int IMG_WIDTH = 800;
     // Namivia1 is 3648 x 2736, Namibia2 is 640 x 480
-    private static final String sourceImageName = "/Users/kevinearls/tmp/images/Switzerland/Switzerland2.jpg";
-    private static final String destinationImageName = "/Users/kevinearls/tmp/images/Switzerland/Switzerland2.png";
+//    private static final String sourceImageName = "/Users/kevinearls/tmp/images/Switzerland/Switzerland2.jpg";
+//    private static final String destinationImageName = "/Users/kevinearls/tmp/images/Switzerland/Switzerland2.png";
+    //private static final String sourceImageName = "/Users/kevinearls/sources/travle/drive-download-20240507T141048Z-001/Paris/Paris Image 1.jpg";
+    //private static final String destinationImageName = "/Users/kevinearls/tmp/images/Paris/Paris Image 1.png";
 
+    private static String imagesSourcePath = "/Users/kevinearls/sources/travle/drive-download-20240507T141048Z-001/";
+    private static String destinationPath = "/Users/kevinearls/tmp/images";
     public static void main(String[] args) throws IOException {
-        resize(sourceImageName, destinationImageName, IMG_WIDTH);
+        var me = new ResizeImage();
+        try (Stream<Path> paths = Files.walk(Paths.get(imagesSourcePath))) {
+            paths.filter(Files::isRegularFile)
+                    .filter(path -> !path.getFileName().toString().equalsIgnoreCase(".DS_Store"))
+                    .forEach(path -> {
+                        System.out.println("File: " + path.toString() + " | " + path.getFileName().toString());
+                        var imageDirectoryName = path.getName(path.getNameCount() - 2);
+                        // Create a destinationImagesDirectory if it doesn't exist
+                        Path destinationImagesDirectory = Paths.get(destinationPath + "/" + imageDirectoryName);
+                        try {
+                            if (Files.notExists(destinationImagesDirectory)) {
+                                Files.createDirectory(destinationImagesDirectory);
+                            }
+
+                            var destinationImageName =  me.createDestinationFileName(destinationPath + "/" + imageDirectoryName + "/" + path.getFileName());
+                            //System.out.println("Creating Image: " + destinationImageName);
+                            resize(path.toString(), destinationImageName, IMG_WIDTH);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -76,9 +101,12 @@ public class ResizeImage {
             }
         } catch (ImageProcessingException e) {
             // FIXME we probably just want to log an error here
-            throw new RuntimeException(e);
+            System.out.println("Error reading image file: " + e.getMessage());
+            return 0;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            //throw new RuntimeException(e);
+            System.out.println("Error reading image file: " + e.getMessage());
+            return 0;
         }
     }
 
@@ -124,6 +152,7 @@ public class ResizeImage {
         var bufferedImage = convertToBufferedImage(resizedImage);
         System.out.println("Converted Image Width: " + bufferedImage.getWidth() + " height: " + bufferedImage.getHeight());
 
+        System.out.println("Destination image name: [" + destinationImageName + "]");
         ImageIO.write(bufferedImage, "png", new File(destinationImageName));
     }
 
@@ -173,5 +202,13 @@ public class ResizeImage {
         graphics2D.dispose();
 
         return bufferedImage;
+    }
+
+    public String createDestinationFileName(final String originalFileName) {
+        int dotIndex = originalFileName.lastIndexOf(".");
+        String baseName = originalFileName.substring(0, dotIndex);
+        String newName = baseName + ".png";
+
+        return newName;
     }
 }
